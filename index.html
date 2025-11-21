@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHAPE OF YOU</title>
+    
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* --- CSS STYLES --- */
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --bg-color: #fdfbf7;
+            --text-color: #2d3748;
+            --text-light: #718096;
+            --card-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+            background-size: 40px 40px;
+            color: var(--text-color);
+            line-height: 1.6;
+            /* FIXED LAYOUT: Removed Flexbox centering which causes distortion on long pages */
+            display: block; 
+            padding: 40px 20px;
+            margin: 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: #ffffff;
+            padding: 50px;
+            border-radius: 24px;
+            box-shadow: var(--card-shadow);
+            position: relative;
+            overflow: hidden;
+            /* FIXED: Standard centering works best for scrolling content */
+            margin: 0 auto; 
+        }
+
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 8px;
+            background: var(--primary-gradient);
+        }
+
+        h1 { text-align: center; color: var(--text-color); margin-bottom: 1.5rem; font-weight: 800; font-size: 2.5rem; letter-spacing: 1px; text-transform: uppercase; }
+        h2.greeting { font-size: 1.2rem; color: var(--text-color); margin-bottom: 2px; display: flex; align-items: center; gap: 10px; }
+        p, li { color: var(--text-color); font-size: 1.05rem; }
+        
+        /* Welcome Page */
+        .intro-section { margin-bottom: 25px; }
+        .icon-heading { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 5px; }
+        .icon-heading i { font-size: 1.8rem; color: #667eea; margin-top: 5px; }
+        .instruction-box { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 15px; padding: 25px; margin: 25px 0; }
+        .instruction-list { padding-left: 20px; margin-top: 10px; }
+        .instruction-list li { margin-bottom: 10px; }
+        .scale-list { list-style: none; padding: 0; font-weight: 700; color: #718096; margin-top: 10px; display: flex; flex-wrap: wrap; gap: 10px; }
+        .scale-badge { background: #edf2f7; padding: 5px 12px; border-radius: 15px; font-size: 0.9rem; }
+        .closing-message { text-align: center; margin-top: 30px; margin-bottom: 10px; font-size: 1.1rem; color: var(--text-color); font-weight: 700; display: flex; justify-content: center; align-items: center; gap: 10px; }
+
+        /* Buttons */
+        button { display: block; width: 100%; padding: 20px; font-size: 1.3rem; font-weight: 800; color: #fff; background: var(--primary-gradient); border: none; border-radius: 12px; cursor: pointer; transition: all 0.3s ease; font-family: 'Nunito', sans-serif; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }
+        button:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102, 126, 234, 0.6); }
+        
+        /* Quiz Form */
+        fieldset { border: none; border-bottom: 1px solid #edf2f7; padding: 0 0 25px 0; margin-bottom: 25px; }
+        fieldset:last-child { border-bottom: none; }
+        legend { font-weight: 700; font-size: 1.1rem; margin-bottom: 15px; color: var(--text-color); display: block; width: 100%; }
+        .likert-scale { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 10px 0; }
+        .likert-label-left, .likert-label-right { flex-basis: 15%; font-size: 0.7rem; color: #718096; font-weight: 700; text-transform: uppercase; }
+        .likert-label-left { text-align: left; } .likert-label-right { text-align: right; }
+        .options { display: flex; flex-basis: 65%; align-items: center; justify-content: space-between; position: relative; padding: 0 10px; }
+        .options::before { content: ""; position: absolute; left: 10px; right: 10px; top: 50%; height: 3px; background-color: #edf2f7; transform: translateY(-50%); z-index: 1; border-radius: 2px; }
+        .options label { display: block; width: 20px; height: 20px; border-radius: 50%; border: 3px solid #cbd5e0; background-color: #fff; cursor: pointer; position: relative; z-index: 2; transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .options label:first-child, .options label:last-child { width: 32px; height: 32px; }
+        .options label:nth-child(2), .options label:nth-child(4) { width: 24px; height: 24px; }
+        .options label:nth-child(3) { width: 18px; height: 18px; }
+        input[type="radio"] { display: none; }
+        .options label:has(input[type="radio"]:checked) { background-color: #667eea; border-color: #667eea; transform: scale(1.15); box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2); }
+        .options label:hover { border-color: #667eea; }
+
+        /* --- RESULTS PAGE --- */
+        #results { display: flex; flex-direction: column; align-items: center; width: 100%; }
+        
+        /* Heading (Dark Grey) */
+        .results-intro-line {
+            font-size: 1.6rem; font-weight: 800; text-align: center; margin-bottom: 30px;
+            color: #2d3748; 
+            line-height: 1.2;
+        }
+
+        #chart-container { margin: auto; display: block; overflow: visible; }
+        
+        /* Grid Lines (Thin Dashed) */
+        .grid-circle { fill: none; stroke: #cbd5e0; stroke-width: 0.5px; stroke-dasharray: 4, 4; }
+        
+        /* Average Circle */
+        .average-circle {
+            fill: none; stroke: #2d3748; stroke-width: 1.8px; 
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .average-circle.visible { opacity: 0.8; }
+
+        /* Spiky Polygon (Thin Straight Lines) */
+        .spiky-polygon { 
+            fill: none; 
+            stroke: #718096; 
+            stroke-width: 1px; stroke-dasharray: 6, 4; 
+            opacity: 0.5; 
+        }
+        
+        /* Main Shape Outline (Darker Grey) */
+        .personality-stroke { 
+            fill: none;
+            stroke: #2d3748; /* Dark Grey Outline */
+            stroke-width: 1.8px; 
+            filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.15)); 
+        }
+
+        /* Axis Lines (Thin, Visible) */
+        .axis-line { 
+            stroke: #a0aec0; 
+            stroke-width: 1px; 
+            stroke-linecap: round; 
+        }
+        
+        .axis text { font-size: 14px; fill: #2d3748; font-weight: 800; text-anchor: middle; dominant-baseline: middle; }
+        
+        .handle { fill: #fff; stroke: #2d3748; stroke-width: 1px; cursor: pointer; transition: r 0.2s ease; }
+        .handle:hover { stroke: #2d3748; stroke-width: 2px; }
+        .tooltip { position: absolute; opacity: 0; background: #2d3748; color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.9rem; font-weight: 700; pointer-events: none; transform: translate(-50%, -100%); margin-top: -12px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 100; white-space: nowrap; }
+
+        /* Toggle Switch */
+        .toggle-container {
+            display: flex; align-items: center; gap: 10px; margin-top: 10px; margin-bottom: 20px;
+            font-weight: 500; color: #4a5568;
+        }
+        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e0; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #667eea; }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        /* Analysis */
+        .analysis-header { font-size: 1.4rem; font-weight: 800; color: #2d3748; margin-top: 40px; margin-bottom: 20px; text-align: center; border-bottom: 2px solid #edf2f7; padding-bottom: 10px; width: 100%; }
+        #score-list { width: 100%; margin-bottom: 40px; }
+        .score-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9; font-size: 1.1rem; }
+        .legend-dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; margin-right: 12px; }
+        .score-name { font-weight: 700; color: #4a5568; }
+        .score-val { font-weight: 700; color: #4a5568; }
+
+        table { width: 100%; border-collapse: collapse; margin-bottom: 40px; font-size: 0.95rem; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+        th { background-color: #f7fafc; color: #4a5568; font-weight: 800; text-transform: uppercase; font-size: 0.85rem; }
+        td strong { color: #2d3748; }
+        tr:last-child td { border-bottom: none; }
+
+        .footer-note { font-size: 0.9rem; color: #718096; text-align: center; margin-top: 20px; padding: 20px; background: #f8fafc; border-radius: 12px; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <div id="welcome-container">
+            <h1>SHAPE OF YOU</h1>
+            <h2 class="greeting">
+                <div class="icon-heading"><i class="fa-solid fa-face-smile-beam" style="font-size: 1.2rem;"></i> Hey there!</div>
+            </h2>
+            <div class="icon-heading">
+                 <p>Have you ever wondered what a <strong>visual representation of your personality</strong> would look like?<br>Answer these questions to see your personality come to life.</p>
+            </div>
+            <div class="instruction-box">
+                <div class="icon-heading"><i class="fa-solid fa-clipboard-list" style="font-size: 1.2rem;"></i><p style="margin:0;">While answering, please follow these instructions-</p></div>
+                <ol class="instruction-list">
+                    <li>Answer according to how you see yourself in the present. (Not how you used to be in the past or want to be in the future.)</li>
+                    <li>Be honest and true to yourself. (Remember, spontaneous answers are often the most accurate ones.)</li>
+                    <li>Take as much time as you need. (There is no time-limit.)</li>
+                </ol>
+                <div class="icon-heading" style="margin-top: 20px;"><i class="fa-solid fa-arrow-down-short-wide" style="font-size: 1rem;"></i><p style="margin:0;">Your answers may be in the following range-</p></div>
+                <ul class="scale-list">
+                    <li class="scale-badge">Strongly Agree</li><li class="scale-badge">Agree</li><li class="scale-badge">Neutral</li><li class="scale-badge">Disagree</li><li class="scale-badge">Strongly Disagree</li>
+                </ul>
+            </div>
+            <div class="closing-message">There are no right or wrong answers- Be Free, Be Yourself!</div>
+            <button id="start-button">TAKE THE ASSESSMENT!</button>
+        </div>
+
+        <div id="quiz-wrapper" style="display: none;">
+            <form id="quiz-form" novalidate>
+                <fieldset><legend>1. I'm often the one who gets things going and brings energy to a party.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q1" value="1" required></label><label><input type="radio" name="q1" value="2"></label><label><input type="radio" name="q1" value="3"></label><label><input type="radio" name="q1" value="4"></label><label><input type="radio" name="q1" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>2. I tend to focus on my own needs and don't often worry about how others are feeling.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q2" value="1" required></label><label><input type="radio" name="q2" value="2"></label><label><input type="radio" name="q2" value="3"></label><label><input type="radio" name="q2" value="4"></label><label><input type="radio" name="q2" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>3. I'm the kind of person who always has a plan and thinks ahead.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q3" value="1" required></label><label><input type="radio" name="q3" value="2"></label><label><input type="radio" name="q3" value="3"></label><label><input type="radio" name="q3" value="4"></label><label><input type="radio" name="q3" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+<fieldset><legend>4. It doesn't take much for me to feel overwhelmed or anxious.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q4" value="1" required></label><label><input type="radio" name="q4" value="2"></label><label><input type="radio" name="q4" value="3"></label><label><input type="radio" name="q4" value="4"></label><label><input type="radio" name="q4" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>5. I enjoy using a wide range of words when I speak or write.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q5" value="1" required></label><label><input type="radio" name="q5" value="2"></label><label><input type="radio" name="q5" value="3"></label><label><input type="radio" name="q5" value="4"></label><label><input type="radio" name="q5" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>6. I'm generally a quiet person, especially in groups, and tend to listen more than talk.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q6" value="1" required></label><label><input type="radio" name="q6" value="2"></label><label><input type="radio" name="q6" value="3"></label><label><input type="radio" name="q6" value="4"></label><label><input type="radio" name="q6" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>7. I genuinely enjoy hearing other people's stories and learning about their lives.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q7" value="1" required></label><label><input type="radio" name="q7" value="2"></label><label><input type="radio" name="q7" value="3"></label><label><input type="radio" name="q7" value="4"></label><label><input type="radio" name="q7" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>8. I'm a bit messy; I tend to leave my things out rather than put them away immediately.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q8" value="1" required></label><label><input type="radio" name="q8" value="2"></label><label><input type="radio" name="q8" value="3"></label><label><input type="radio" name="q8" value="4"></label><label><input type="radio" name="q8" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>9. I'm pretty easygoing and don't let small things get to me.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q9" value="1" required></label><label><input type="radio" name="q9" value="2"></label><label><input type="radio" name="q9" value="3"></label><label><input type="radio" name="q9" value="4"></label><label><input type="radio" name="q9" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>10. I prefer dealing with concrete facts and practical things rather than theoretical or philosophical concepts.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q10" value="1" required></label><label><input type="radio" name="q10" value="2"></label><label><input type="radio" name="q10" value="3"></label><label><input type="radio" name="q10" value="4"></label><label><input type="radio" name="q10" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>11. I feel at ease and can be myself when I'm meeting new people or in a group.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q11" value="1" required></label><label><input type="radio" name="q11" value="2"></label><label><input type="radio" name="q11" value="3"></label><label><input type="radio" name="q11" value="4"></label><label><input type="radio" name="q11" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>12. I can be sarcastic or critical, and sometimes I end up hurting people's feelings.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q12" value="1" required></label><label><input type="radio" name="q12" value="2"></label><label><input type="radio" name="q12" value="3"></label><label><input type="radio" name="q12" value="4"></label><label><input type="radio" name="q12" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>13. I'm the person who notices the small things and the fine print that others might miss.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q13" value="1" required></label><label><input type="radio" name="q13" value="2"></label><label><input type="radio" name="q13" value="3"></label><label><input type="radio" name="q13" value="4"></label><label><input type="radio" name="q13" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>14. My mind often gets stuck on things that could go wrong.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q14" value="1" required></label><label><input type="radio" name="q14" value="2"></label><label><input type="radio" name="q14" value="3"></label><label><input type="radio" name="q14" value="4"></label><label><input type="radio" name="q14" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>15. I have a rich inner world and enjoy daydreaming or thinking up creative scenarios.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q15" value="1" required></label><label><input type="radio" name="q15" value="2"></label><label><input type="radio" name="q15" value="3"></label><label><input type="radio" name="q15" value="4"></label><label><input type="radio" name="q15" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>16. I prefer to let others take the lead and don't like being the center of attention.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q16" value="1" required></label><label><input type="radio" name="q16" value="2"></label><label><input type="radio" name="q16" value="3"></label><label><input type="radio" name="q16" value="4"></label><label><input type="radio" name="q16" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>17. Seeing someone else in a difficult spot makes me feel a strong urge to help.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q17" value="1" required></label><label><input type="radio" name="q17" value="2"></label><label><input type="radio" name="q17" value="3"></label><label><input type="radio" name="q17" value="4"></label><label><input type="radio" name="q17" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>18. I'm not the most organized person; my workspace or room can get cluttered.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q18" value="1" required></label><label><input type="radio" name="q18" value="2"></label><label><input type="radio" name="q18" value="3"></label><label><input type="radio" name="q18" value="4"></label><label><input type="radio" name="q18" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>19. It's rare for me to feel sad or down for very long.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q19" value="1" required></label><label><input type="radio" name="q19" value="2"></label><label><input type="radio" name="q19" value="3"></label><label><input type="radio" name="q19" value="4"></label><label><input type="radio" name="q19" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>20. I'm more of a "down-to-earth" person and don't spend much time on abstract theories.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q20" value="1" required></label><label><input type="radio" name="q20" value="2"></label><label><input type="radio" name="q20" value="3"></label><label><input type="radio" name="q20" value="4"></label><label><input type="radio" name="q20" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>21. I find it easy and natural to strike up a conversation with almost anyone.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q21" value="1" required></label><label><input type="radio" name="q21" value="2"></label><label><input type="radio" name="q21" value="3"></label><label><input type="radio" name="q21" value="4"></label><label><input type="radio" name="q21" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>22. I find it hard to get emotionally invested in other people's personal problems.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q22" value="1" required></label><label><input type="radio" name="q22" value="2"></label><label><input type="radio" name="q22" value="3"></label><label><input type="radio" name="q22" value="4"></label><label><input type="radio" name="q22" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>23. When I see a task that needs doing, I prefer to take care of it immediately.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q23" value="1" required></label><label><input type="radio" name="q23" value="2"></label><label><input type="radio" name="q23" value="3"></label><label><input type="radio" name="q23" value="4"></label><label><input type="radio" name="q23" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>24. I'm sensitive to my surroundings and can be easily bothered by noise or chaos.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q24" value="1" required></label><label><input type="radio" name="q24" value="2"></label><label><input type="radio" name="q24" value="3"></label><label><input type="radio" name="q24" value="4"></label><label><input type="radio" name="q24" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>25. I often have creative insights or unique solutions to problems.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q25" value="1" required></label><label><input type="radio" name="q25" value="2"></label><label><input type="radio" name="q25" value="3"></label><label><input type="radio" name="q25" value="4"></label><label><input type="radio" name="q25" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>26. If I'm in a group, I often don't have much to add to the conversation.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q26" value="1" required></label><label><input type="radio" name="q26" value="2"></label><label><input type="radio" name="q26" value="3"></label><label><input type="radio" name="q26" value="4"></label><label><input type="radio" name="q26" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>27. I'm very compassionate and am easily moved by others' kindness or suffering.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q27" value="1" required></label><label><input type="radio" name="q27" value="2"></label><label><input type="radio" name="q27" value="3"></label><label><input type="radio" name="q27" value="4"></label><label><input type="radio" name="q27" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>28. I have a habit of setting things down and then not being able to find them later.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q28" value="1" required></label><label><input type="radio" name="q28" value="2"></label><label><input type="radio" name="q28" value="3"></label><label><input type="radio" name="q28" value="4"></label><label><input type="radio" name="q28" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>29. I feel my emotions very strongly and can go from happy to upset pretty quickly.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q29" value="1" required></label><label><input type="radio" name="q29" value="2"></label><label><input type="radio" name="q29" value="3"></label><label><input type="radio" name="q29" value="4"></label><label><input type="radio" name="q29" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>30. I'm more practical than imaginative; I don't daydream a lot.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q30" value="1" required></label><label><input type="radio" name="q30" value="2"></label><label><input type="radio" name="q30" value="3"></label><label><input type="radio" name="q30" value="4"></label><label><input type="radio" name="q30" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>31. At parties, I make an effort to mingle and talk to many different people.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q31" value="1" required></label><label><input type="radio" name="q31" value="2"></label><label><input type="radio" name="q31" value="3"></label><label><input type="radio" name="q31" value="4"></label><label><input type="radio" name="q31" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>32. I'm a private person and don't feel a strong need to connect with others.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q32" value="1" required></label><label><input type="radio" name="q32" value="2"></label><label><input type="radio" name="q32" value="3"></label><label><input type="radio" name="q32" value="4"></label><label><input type="radio" name="q32" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>33. I feel better when things are neat and tidy, and I like having a routine.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q33" value="1" required></label><label><input type="radio" name="q33" value="2"></label><label><input type="radio" name="q33" value="3"></label><label><input type="radio" name="q33" value="4"></label><label><input type="radio" name="q33" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>34. My mood can be unpredictable and shift from one day to the next.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q34" value="1" required></label><label><input type="radio" name="q34" value="2"></label><label><input type="radio" name="q34" value="3"></label><label><input type="radio" name="q34" value="4"></label><label><input type="radio" name="q34" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>35. I can grasp new or complex ideas faster than most people.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q35" value="1" required></label><label><input type="radio" name="q35" value="2"></label><label><input type="radio" name="q35" value="3"></label><label><input type="radio" name="q35" value="4"></label><label><input type="radio" name="q35" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>36. I get uncomfortable when I'm the focus of a group's attention.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q36" value="1" required></label><label><input type="radio" name="q36" value="2"></label><label><input type="radio" name="q36" value="3"></label><label><input type="radio" name="q36" value="4"></label><label><input type="radio" name="q36" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+<fieldset><legend>37. I'm always willing to drop what I'm doing to help a friend or listen to someone who needs to talk.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q37" value="1" required></label><label><input type="radio" name="q37" value="2"></label><label><input type="radio" name="q37" value="3"></label><label><input type="radio" name="q37" value="4"></label><label><input type="radio" name="q37" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>38. I tend to put off unpleasant tasks or find ways to avoid my responsibilities.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q38" value="1" required></label><label><input type="radio" name="q38" value="2"></label><label><input type="radio" name="q38" value="3"></label><label><input type="radio" name="q38" value="4"></label><label><input type="radio" name="q38" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>39. I experience a lot of emotional ups and downs.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q39" value="1" required></label><label><input type="radio" name="q39" value="2"></label><label><input type="radio" name="q39" value="3"></label><label><input type="radio" name="q39" value="4"></label><label><input type="radio" name="q39" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>40. I'm comfortable using and understanding complex or sophisticated language.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q40" value="1" required></label><label><input type="radio" name="q40" value="2"></label><label><input type="radio" name="q40" value="3"></label><label><input type="radio" name="q40" value="4"></label><label><input type="radio" name="q40" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>41. I'm confident speaking up in a crowd and enjoy having all eyes on me.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q41" value="1" required></label><label><input type="radio" name="q41" value="2"></label><label><input type="radio" name="q41" value="3"></label><label><input type="radio" name="q41" value="4"></label><label><input type="radio" name="q41" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>42. I can easily "put myself in someone else's shoes" and understand what they're feeling.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q42" value="1" required></label><label><input type="radio" name="q42" value="2"></label><label><input type="radio" name="q42" value="3"></label><label><input type="radio" name="q42" value="4"></label><label><input type="radio" name="q42" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>43. I live my life by a set schedule and am very disciplined.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q43" value="1" required></label><label><input type="radio" name="q43" value="2"></label><label><input type="radio" name="q43" value="3"></label><label><input type="radio" name="q43" value="4"></label><label><input type="radio" name="q43" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>44. Small annoyances or delays can really get under my skin and make me grumpy.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q44" value="1" required></label><label><input type="radio" name="q44" value="2"></label><label><input type="radio" name="q44" value="3"></label><label><input type="radio" name="q44" value="4"></label><label><input type="radio" name="q44" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>45. I enjoy spending time just thinking, exploring ideas, or letting my mind wander.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q45" value="1" required></label><label><input type="radio" name="q45" value="2"></label><label><input type="radio" name="q45" value="3"></label><label><input type="radio" name="q45" value="4"></label><label><input type="radio" name="q45" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>46. Around people I don't know, I'm often reserved and quiet.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q46" value="1" required></label><label><input type="radio" name="q46" value="2"></label><label><input type="radio" name="q46" value="3"></label><label><input type="radio" name="q46" value="4"></label><label><input type="radio" name="q46" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>47. People tell me I'm warm and approachable and that I make them feel comfortable.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q47" value="1" required></label><label><input type="radio" name="q47" value="2"></label><label><input type="radio" name="q47" value="3"></label><label><input type="radio" name="q47" value="4"></label><label><input type="radio" name="q47" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>48. I'm very thorough in my work and strive to make sure every last detail is perfect.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q48" value="1" required></label><label><input type="radio" name="q48" value="2"></label><label><input type="radio" name="q48" value="3"></label><label><input type="radio" name="q48" value="4"></label><label><input type="radio" name="q48" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>49. I have periods where I just feel down or sad, sometimes for no specific reason.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q49" value="1" required></label><label><input type="radio" name="q49" value="2"></label><label><input type="radio" name="q49" value="3"></label><label><input type="radio" name="q49" value="4"></label><label><input type="radio" name="q49" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+                <fieldset><legend>50. I'm always coming up with new, creative ideas or ways to do things.</legend><div class="likert-scale"><span class="likert-label-left">Strongly Disagree</span><div class="options"><label><input type="radio" name="q50" value="1" required></label><label><input type="radio" name="q50" value="2"></label><label><input type="radio" name="q50" value="3"></label><label><input type="radio" name="q50" value="4"></label><label><input type="radio" name="q50" value="5"></label></div><span class="likert-label-right">Strongly Agree</span></div></fieldset>
+
+                
+                <button type="submit">SEE MY SHAPE!</button>
+            </form>
+        </div>
+
+        <div id="results" style="display: none;">
+            <div class="results-intro-line">So that's the SHAPE OF YOU!</div>
+            
+            <div class="toggle-container">
+                <span>Show Average</span>
+                <label class="switch">
+                    <input type="checkbox" id="average-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <svg id="chart-container"></svg>
+            
+            <div class="analysis-header">Know more about your scores and traits</div>
+            <div id="score-list"></div>
+            <table id="trait-table">
+                <thead><tr><th style="width: 10%">Trait</th><th style="width: 30%">What it measures</th><th style="width: 30%">High Score Interpretation</th><th style="width: 30%">Low Score Interpretation</th></tr></thead>
+                <tbody id="trait-table-body"></tbody>
+            </table>
+            <div class="footer-note">
+                Thank you for participating. We hope this provided a fun and meaningful moment of self-reflection.<br>
+                Disclaimer: this assessment is for creative and personal purposes only and is not to be considered for professional advice or diagnosis.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const startBtn = document.getElementById("start-button");
+            if (startBtn) {
+                startBtn.addEventListener("click", () => {
+                    document.getElementById("welcome-container").style.display = "none";
+                    document.getElementById("quiz-wrapper").style.display = "block";
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            }
+
+            // FIXED: Pastel Colors
+            const colors = { 
+                O: "#5D3FD3", // Pastel Purple
+                C: "#87E08B", // Pastel Green
+                E: "#FCE979", // Pastel Yellow
+                A: "#FFB8FF", // Pastel Pink
+                N: "#5EACFF"  // Pastel Blue
+            };
+
+            const traitDetails = {
+                O: { name: "Openness", full: "Openness to Experience", desc: "Creativity, curiosity, and willingness to try new things.", high: "Imaginative, curious, artistic.", low: "Practical, conventional, grounded." },
+                C: { name: "Conscientiousness", full: "Conscientiousness", desc: "Organization, discipline, and reliability.", high: "Organized, disciplined, careful.", low: "Spontaneous, flexible, messy." },
+                E: { name: "Extraversion", full: "Extraversion", desc: "Social interaction, energy, and enthusiasm.", high: "Sociable, energetic, talkative.", low: "Reserved, solitary, quiet." },
+                A: { name: "Agreeableness", full: "Agreeableness", desc: "Compassion, cooperation, and trust.", high: "Trusting, helpful, soft-hearted.", low: "Critical, skeptical, competitive." },
+                N: { name: "Neuroticism", full: "Neuroticism (Emotional Stability)", desc: "Emotional instability and negative emotions.", high: "Anxious, moody, sensitive.", low: "Calm, emotionally stable, resilient." }
+            };
+
+            const quizForm = document.getElementById("quiz-form");
+            if(quizForm) {
+                quizForm.addEventListener("submit", (event) => {
+                    event.preventDefault();
+
+                    const scores = { O: 0, C: 0, E: 0, A: 0, N: 0 };
+                    const formData = new FormData(event.target);
+                    const scoringKey = {
+                        q1: {trait:'E',reverse:false}, q2: {trait:'A',reverse:true}, q3: {trait:'C',reverse:false}, q4: {trait:'N',reverse:true}, q5: {trait:'O',reverse:false},
+                        q6: {trait:'E',reverse:true}, q7: {trait:'A',reverse:false}, q8: {trait:'C',reverse:true}, q9: {trait:'N',reverse:false}, q10:{trait:'O',reverse:true},
+                        q11:{trait:'E',reverse:false}, q12:{trait:'A',reverse:true}, q13:{trait:'C',reverse:false}, q14:{trait:'N',reverse:true}, q15:{trait:'O',reverse:false},
+                        q16:{trait:'E',reverse:true}, q17:{trait:'A',reverse:false}, q18:{trait:'C',reverse:true}, q19:{trait:'N',reverse:false}, q20:{trait:'O',reverse:true},
+                        q21:{trait:'E',reverse:false}, q22:{trait:'A',reverse:true}, q23:{trait:'C',reverse:false}, q24:{trait:'N',reverse:true}, q25:{trait:'O',reverse:false},
+                        q26:{trait:'E',reverse:true}, q27:{trait:'A',reverse:false}, q28:{trait:'C',reverse:true}, q29:{trait:'N',reverse:true}, q30:{trait:'O',reverse:true},
+                        q31:{trait:'E',reverse:false}, q32:{trait:'A',reverse:true}, q33:{trait:'C',reverse:false}, q34:{trait:'N',reverse:true}, q35:{trait:'O',reverse:false},
+                        q36:{trait:'E',reverse:true}, q37:{trait:'A',reverse:false}, q38:{trait:'C',reverse:true}, q39:{trait:'N',reverse:true}, q40:{trait:'O',reverse:false},
+                        q41:{trait:'E',reverse:false}, q42:{trait:'A',reverse:false}, q43:{trait:'C',reverse:false}, q44:{trait:'N',reverse:true}, q45:{trait:'O',reverse:false},
+                        q46:{trait:'E',reverse:true}, q47:{trait:'A',reverse:false}, q48:{trait:'C',reverse:false}, q49:{trait:'N',reverse:true}, q50:{trait:'O',reverse:false}
+                    };
+                    
+                    for (let i = 1; i <= 50; i++) {
+                        const qName = 'q' + i;
+                        if(!scoringKey[qName]) continue; 
+                        const val = formData.get(qName);
+                        let answer = val ? parseInt(val) : 3; 
+                        if (scoringKey[qName].reverse) answer = (5 + 1) - answer;
+                        scores[scoringKey[qName].trait] += answer;
+                    }
+
+                    const min_score = 10; const max_score = 50;
+                    // FIXED: LINEAR MATH (No distortion)
+                    const normalize = (score) => Math.max(0, ((score - min_score) / (max_score - min_score)) * 100);
+
+                    const finalScores = {
+                        O: normalize(scores.O), C: normalize(scores.C), E: normalize(scores.E), A: normalize(scores.A), N: normalize(scores.N)
+                    };
+
+                    const graphData = { "O": finalScores.O, "C": finalScores.C, "E": finalScores.E, "A": finalScores.A, "N": finalScores.N };
+
+                    drawShape(graphData, traitDetails, colors);
+                    populateResultsText(graphData, traitDetails, colors);
+
+                    document.getElementById("quiz-wrapper").style.display = "none";
+                    document.getElementById("results").style.display = "block";
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            }
+
+            document.getElementById("average-toggle").addEventListener("change", (e) => {
+                const avgCircle = d3.select(".average-circle");
+                if(e.target.checked) avgCircle.classed("visible", true);
+                else avgCircle.classed("visible", false);
+            });
+        });
+
+        function populateResultsText(scores, details, colors) {
+            const listContainer = document.getElementById("score-list");
+            listContainer.innerHTML = "";
+            const order = ['O','C','E','A','N'];
+            order.forEach(key => {
+                const div = document.createElement("div");
+                div.className = "score-item";
+                div.innerHTML = `
+                    <div style="display:flex; align-items:center;">
+                        <span class="legend-dot" style="background-color: ${colors[key]}"></span>
+                        <span class="score-name">${details[key].full}</span>
+                    </div>
+                    <span class="score-val">${scores[key].toFixed(0)}%</span>
+                `;
+                listContainer.appendChild(div);
+            });
+
+            const tbody = document.getElementById("trait-table-body");
+            tbody.innerHTML = "";
+            order.forEach(key => {
+                const row = document.createElement("tr");
+                row.innerHTML = `<td><strong>${key}</strong></td><td>${details[key].desc}</td><td>${details[key].high}</td><td>${details[key].low}</td>`;
+                tbody.appendChild(row);
+            });
+        }
+
+        function drawShape(scoresData, details, colors) {
+            const width = 500; const height = 500; 
+            const center = { x: width / 2, y: height / 2 };
+            const maxRadius = 170; 
+            const traitOrder = ["O", "C", "E", "A", "N"];
+
+            const points = traitOrder.map((trait, i) => {
+                const score = scoresData[trait];
+                // FIXED: Linear Math
+                const radius = (score / 100) * maxRadius; 
+                const angle = (i / 5) * (2 * Math.PI) - (Math.PI / 2);
+                return { x: center.x + radius * Math.cos(angle), y: center.y + radius * Math.sin(angle), trait: trait, score: score, label: trait };
+            });
+
+            const svg = d3.select("#chart-container").attr("width", "100%").attr("viewBox", `0 0 ${width} ${height}`).html("");
+            const defs = svg.append("defs");
+
+            // Radial Gradients for BLOBS
+            traitOrder.forEach(trait => {
+                const grad = defs.append("radialGradient").attr("id", `grad-${trait}`);
+                grad.append("stop").attr("offset", "0%").attr("stop-color", colors[trait]).attr("stop-opacity", 1);
+                grad.append("stop").attr("offset", "100%").attr("stop-color", colors[trait]).attr("stop-opacity", 0);
+            });
+
+            // Clip Path
+            const clipPath = defs.append("clipPath").attr("id", "shape-clip");
+            const shapeGenerator = d3.line().x(d => d.x).y(d => d.y).curve(d3.curveCardinalClosed.tension(0));
+            clipPath.append("path").datum(points).attr("d", shapeGenerator);
+            
+            defs.append("marker").attr("id", "arrowhead").attr("viewBox", "0 -5 10 10").attr("refX", 8).attr("refY", 0).attr("markerWidth", 6).attr("markerHeight", 6).attr("orient", "auto").append("path").attr("d", "M0,-5L10,0L0,5").attr("fill", "#a0aec0");
+
+            const chartGroup = svg.append("g");
+
+            // Grids
+            [0.2, 0.4, 0.6, 0.8, 1.0].forEach((level) => {
+                chartGroup.append("circle").attr("cx", center.x).attr("cy", center.y).attr("r", maxRadius * level).attr("class", "grid-circle");
+            });
+            
+            chartGroup.append("circle").attr("cx", center.x).attr("cy", center.y).attr("r", maxRadius * 0.5).attr("class", "average-circle");
+
+            // FIXED: Spiky Polygon drawn BEFORE fill logic so it appears underneath
+            const linearGenerator = d3.line().x(d => d.x).y(d => d.y).curve(d3.curveLinearClosed);
+            chartGroup.append("path").datum(points).attr("d", linearGenerator).attr("class", "spiky-polygon");
+
+            // --- BLOB FILL (Translucent 0.7) ---
+            const shapeGroup = chartGroup.append("g").attr("clip-path", "url(#shape-clip)").attr("opacity", 0.6); 
+            shapeGroup.append("rect").attr("x", 0).attr("y", 0).attr("width", width).attr("height", height).attr("fill", "white").attr("opacity", 0.1);
+
+            points.forEach(pt => {
+                // Size based on score
+                const blobSize = maxRadius * 0.8 + (pt.score/100 * maxRadius * 0.5);
+                shapeGroup.append("circle").attr("cx", pt.x).attr("cy", pt.y).attr("r", blobSize).attr("fill", `url(#grad-${pt.trait})`);
+            });
+
+            // FIXED: Axes drawn AFTER fill so they stay on top
+            const axes = chartGroup.selectAll(".axis").data(points).enter().append("g");
+            axes.append("line")
+                .attr("x1", center.x).attr("y1", center.y)
+                .attr("x2", (d, i) => center.x + (maxRadius + 20) * Math.cos((i / 5) * (2 * Math.PI) - (Math.PI / 2)))
+                .attr("y2", (d, i) => center.y + (maxRadius + 20) * Math.sin((i / 5) * (2 * Math.PI) - (Math.PI / 2)))
+                .attr("class", "axis-line").attr("marker-end", "url(#arrowhead)");
+            
+            axes.append("text")
+                .attr("x", (d, i) => center.x + (maxRadius + 40) * Math.cos((i / 5) * (2 * Math.PI) - (Math.PI / 2)))
+                .attr("y", (d, i) => center.y + (maxRadius + 40) * Math.sin((i / 5) * (2 * Math.PI) - (Math.PI / 2)))
+                .attr("dx", "-7px").text(d => d.label);
+
+            // Outline
+            chartGroup.append("path").datum(points).attr("d", shapeGenerator).attr("class", "personality-stroke");
+
+            const tooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
+            let activePoint = null; 
+            const handleGroup = chartGroup.selectAll(".handle-group").data(points).enter().append("g");
+            
+            handleGroup.append("circle").attr("cx", d => d.x).attr("cy", d => d.y).attr("r", 25).style("fill", "transparent").style("cursor", "pointer")
+                .on("mouseover", (e, d) => {
+                    if (activePoint !== d) {
+                        tooltip.transition().duration(200).style("opacity", 1);
+                        tooltip.html(`${d.trait}: ${d.score.toFixed(0)}%`).style("left", (e.pageX) + "px").style("top", (e.pageY - 20) + "px");
+                        d3.select(e.currentTarget.parentNode).select(".handle").transition().attr("r", 8);
+                    }
+                })
+                .on("mouseout", (e, d) => {
+                    if (activePoint !== d) {
+                        tooltip.transition().duration(500).style("opacity", 0);
+                        d3.select(e.currentTarget.parentNode).select(".handle").transition().attr("r", 5);
+                    }
+                })
+                .on("click", (e, d) => {
+                    activePoint = d;
+                    tooltip.transition().duration(200).style("opacity", 1);
+                    tooltip.html(`${d.trait}: ${d.score.toFixed(0)}%`).style("left", (e.pageX) + "px").style("top", (e.pageY - 20) + "px");
+                    d3.selectAll(".handle").attr("r", 5);
+                    d3.select(e.currentTarget.parentNode).select(".handle").attr("r", 8);
+                });
+
+            handleGroup.append("circle").attr("class", "handle").attr("cx", d => d.x).attr("cy", d => d.y).attr("r", 5);
+        }
+    </script>
+
+</body>
+</html>
+
+                
+          
