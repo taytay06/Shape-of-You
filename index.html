@@ -415,7 +415,7 @@
             traitOrder.forEach(trait => {
                 const grad = defs.append("radialGradient").attr("id", `grad-${trait}`);
                 grad.append("stop").attr("offset", "0%").attr("stop-color", colors[trait]).attr("stop-opacity", 1);
-                grad.append("stop").attr("offset", "100%").attr("stop-color", colors[trait]).attr("stop-opacity", 0);
+                grad.append("stop").attr("offset", "80%").attr("stop-color", colors[trait]).attr("stop-opacity", 0);
             });
 
             // Clip Path
@@ -439,12 +439,12 @@
             chartGroup.append("path").datum(points).attr("d", linearGenerator).attr("class", "spiky-polygon");
 
             // --- BLOB FILL (Translucent 0.7) ---
-            const shapeGroup = chartGroup.append("g").attr("clip-path", "url(#shape-clip)").attr("opacity", 0.6); 
+            const shapeGroup = chartGroup.append("g").attr("clip-path", "url(#shape-clip)").attr("opacity", 0.8); 
             shapeGroup.append("rect").attr("x", 0).attr("y", 0).attr("width", width).attr("height", height).attr("fill", "white").attr("opacity", 0.1);
 
             points.forEach(pt => {
                 // Size based on score
-                const blobSize = maxRadius * 0.8 + (pt.score/100 * maxRadius * 0.5);
+                const blobSize = maxRadius * 0.5 + (pt.score/100 * maxRadius * 0.4);
                 shapeGroup.append("circle").attr("cx", pt.x).attr("cy", pt.y).attr("r", blobSize).attr("fill", `url(#grad-${pt.trait})`);
             });
 
@@ -498,4 +498,5 @@
 </html>
 
                 
+
           
